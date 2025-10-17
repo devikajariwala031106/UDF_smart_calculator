@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Calculator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="calculator" role="application" aria-label="Smart Calculator">
+  <h1>Smart Calculator</h1>
+
+  <div class="menubar" role="toolbar" aria-label="Calculator modes">
+    <button id="btn-arith">Arithmetic</button>
+    <button id="btn-sq">Square & Cube</button>
+    <button id="btn-fact">Factorial</button>
+    <button id="btn-even" class="primary">Even - Odd</button>
+  </div>
+
+  <div id="output" aria-live="polite">
+    <div id="expr" aria-hidden="true"></div>
+    <div id="mainValue">0</div>
+  </div>
+
+  <div class="keypad" role="group" aria-label="Calculator keypad">
+    <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button class="op" data-key="/">/</button>
+    <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button class="op" data-key=""></button>
+    <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button class="op" data-key="-">-</button>
+    <button class="clear" id="clearBtn">C</button><button data-key="0">0</button><button class="equals" id="equalsBtn">=</button><button class="op" data-key="+">+</button>
+    <button data-key="(">(</button><button data-key=")">)</button><button data-key=".">.</button><button class="op" data-key="%">%</button>
+    <button id="delBtn">DEL</button>
+  </div>
+
+  <div class="history small" id="historyBlock" aria-live="polite"></div>
+</div>
+
+    <script>
+           let expr = ''
+                let display = document.getElementById('mainValue')
+                let exprLine = document.getElementById('expr')
+                let historyBlock = document.getElementById('historyBlock')
+                let history = []
+
+                function update(){
+                exprLine.textContent = expr || ''
+                display.textContent = expr || '0'
+                }
+
+                function addHistory(t){
+                history.unshift({text:t,time:new Date()})
+                if(history.length>8) history.pop()
+                renderHistory()
+                }
+
+                function renderHistory(){
+                if(history.length===0){ historyBlock.innerHTML = '<div class="small">No recent results</div>'; return }
+                historyBlock.innerHTML = history.map(function(h){ return '<div class="item"><div>'+h.text+'</div><div class="small">'+h.time.toLocaleTimeString()+'</div></div>' }).join('')
+                }
+
+                function lastChar(){ return expr.slice(-1) }
+                function isOp(ch){ return ['+','-','*','/','%'].indexOf(ch) !== -1 }
+
+                function addChar(ch){
+                if(ch === '.'){
+                    let parts = expr.split(/[\+\-\*\/\%\(\)]/)
+                    let last = parts[parts.length-1]
+                    if(last.indexOf('.') !== -1) return
+                    if(last === '' || isOp(lastChar()) || lastChar() === '('){ expr += '0.'; update(); return }
+                }
+                if(isOp(ch)){
+                    if(expr === '' && ch !== '-') return
+                    if(isOp(lastChar())){ expr = expr.slice(0,-1) + ch; update(); return }
+                    if(lastChar() === '(' && ch !== '-') return
+                }
+                if(ch === '('){
+                    let last = lastChar()
+                    if(/\d|\)/.test(last)) expr += '*('
+                    else expr += '('
+                    update(); return
+                }
+                if(ch === ')'){
+                    let open = (expr.match(/\(/g) || []).length
+                    let close = (expr.match(/\)/g) || []).length
+                    if(open <= close) return
+                    expr += ')'; update(); return
+                }
+                expr += ch
+                update()
+                }
+
+                function clearAll(){ expr = ''; update() }
+
+                function back(){ if(expr.length>0) expr = expr.slice(0,-1); update() }
+
+                function formatNum(v){
+                if(Number.isInteger(v)) return v
+                let s = v.toPrecision(12)
+                if(s.indexOf('e') !== -1) return Number(v).toString()
+                s = parseFloat(s).toString()
+                return s
+                }
+
+                function showError(m){
+                display.textContent = m
+                addHistory(m)
+                }
+
+                function calc(){
+                if(!expr) return
+                if(!/^[0-9+\-*/%().\s]+$/.test(expr)){ showError('Invalid characters'); return }
+                try{
+                    let safe = expr.replace(/(\d+(\.\d+)?)%/g,'($1/100)')
+                    let result = Function('"use strict";return ('+safe+')')()
+                    if(!Number.isFinite(result)){ showError('Math error'); return }
+                    let out = formatNum(result)
+                    addHistory(expr + ' = ' + out)
+                    expr = String(out)
+                    update()
+                }catch(e){
+                    showError('Syntax error')
+                }
+                }
+
+                document.querySelectorAll('[data-key]').forEach(function(b){
+                b.addEventListener('click', function(){ addChar(b.getAttribute('data-key')) })
+                })
+
+                document.getElementById('clearBtn').addEventListener('click', clearAll)
+                document.getElementById('equalsBtn').addEventListener('click', calc)
+                document.getElementById('delBtn').addEventListener('click', back)
+
+                function pArith(){
+                let a = prompt('Enter first number:')
+                if(a === null) return
+                if(a.trim() === '' || isNaN(a)){ showError('Enter valid first number'); return }
+                let b = prompt('Enter second number:')
+                if(b === null) return
+                if(b.trim() === '' || isNaN(b)){ showError('Enter valid second number'); return }
+                let op = prompt('Enter operator (+,-,*,/,%)')
+                if(op === null) return
+                if(!/^[+\-*/%]$/.test(op.trim())){ showError('Invalid operator'); return }
+                let A = Number(a), B = Number(b)
+                let res
+                if(op === '+') res = A + B
+                else if(op === '-') res = A - B
+                else if(op === '*') res = A * B
+                else if(op === '/') res = (B !== 0 ? A / B : NaN)
+                else if(op === '%') res = A % B
+                if(!Number.isFinite(res)){ showError('Math error'); return }
+                let out = formatNum(res)
+                addHistory(a + ' ' + op + ' ' + b + ' = ' + out)
+                expr = String(out); update()
+                }
+
+                function pSqCb(){
+                let n = prompt('Number to square/cube:')
+                if(n === null) return
+                if(n.trim() === '' || isNaN(n)){ showError('Enter valid number'); return }
+                let v = Number(n)
+                let s = v*v, c = v*v*v
+                addHistory('sq(' + n + ')=' + formatNum(s) + ' ; cb(' + n + ')=' + formatNum(c))
+                expr = String(formatNum(s)); update()
+                }
+
+                function pFact(){
+                let nRaw = prompt('Enter integer for factorial:')
+                if(nRaw === null) return
+                if(nRaw.trim() === '' || isNaN(nRaw)){ showError('Enter valid number'); return }
+                let n = Math.floor(Number(nRaw))
+                if(n < 0){ showError('Undefined for negative'); return }
+                if(n > 170){ showError('Result too large'); return }
+                let r = 1
+                for(let i=2;i<=n;i++) r *= i
+                addHistory('fact(' + n + ') = ' + r)
+                expr = String(r); update()
+                }
+
+                function pEven(){
+                let nRaw = prompt('Enter an integer:')
+                if(nRaw === null) return
+                if(nRaw.trim() === '' || isNaN(nRaw)){ showError('Enter valid number'); return }
+                let n = Number(nRaw)
+                if(!Number.isInteger(n)){ showError('Not an integer'); return }
+                let res = (n % 2 === 0) ? 'Even' : 'Odd'
+                addHistory(n + ' is ' + res)
+                expr = String(n); update()
+                }
+
+                document.getElementById('btn-arith').addEventListener('click', pArith)
+                document.getElementById('btn-sq').addEventListener('click', pSqCb)
+                document.getElementById('btn-fact').addEventListener('click', pFact)
+                document.getElementById('btn-even').addEventListener('click', pEven)
+
+                document.addEventListener('keydown', function(e){
+                if(/^[0-9+\-*/%().]$/.test(e.key)){ addChar(e.key); e.preventDefault(); return }
+                if(e.key === 'Enter'){ calc(); e.preventDefault(); return }
+                if(e.key === 'Backspace'){ back(); e.preventDefault(); return }
+                if(e.key === 'Escape'){ clearAll(); e.preventDefault(); return }
+                })
+
+                update()
+                renderHistory()
+
+    </script>
+    </body>
+</html>

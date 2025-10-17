@@ -1,0 +1,53 @@
+:root{
+  --bg:#f3f6ff;
+  --panel:#eef3ff;
+  --accent:#3358ff;
+  --accent-dark:#0b2fe6;
+  --screen-bg:#0f1724;
+  --screen-text:#e6f0ff;
+  --btn-bg:#fff;
+  --btn-shadow:rgba(10,18,40,0.06);
+  --danger:#e74c3c;
+  --radius:12px;
+}
+html,body{height:100%}
+body{
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  background:linear-gradient(180deg,var(--bg),#fff 60%);
+  padding:20px;
+  color:#071028;
+}
+.calculator{
+  width:420px;
+  max-width:96vw;
+  background:linear-gradient(180deg,var(--panel),#fff);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:0 12px 30px rgba(8,16,40,0.08);
+  border:1px solid rgba(51,88,255,0.06);
+}
+h1{margin:0 0 10px 0;font-size:20px;color:var(--accent-dark)}
+#output{
+  background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01)),var(--screen-bg);
+  color:var(--screen-text);
+  height:90px;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;margin-bottom:12px;box-shadow:inset 0 -6px 18px rgba(0,0,0,0.28);
+}
+#expr{font-size:13px;opacity:.75;text-align:right;margin-bottom:6px}
+#mainValue{font-size:30px;font-weight:700;text-align:right;font-family:"Roboto Mono",monospace;word-break:break-all}
+.menubar{display:flex;gap:8px;margin-bottom:12px}
+.menubar button{flex:1;background:var(--btn-bg);border:none;padding:9px;border-radius:10px;font-size:14px;cursor:pointer;box-shadow:0 6px 14px var(--btn-shadow);color:#071028}
+.menubar button.primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#fff;box-shadow:0 8px 20px rgba(51,88,255,0.15)}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+.keypad button{padding:14px;font-size:17px;border-radius:10px;border:none;cursor:pointer;background:var(--btn-bg);box-shadow:0 8px 18px var(--btn-shadow);font-weight:600;user-select:none}
+.keypad button.op{background:linear-gradient(180deg,#f6f9ff,#eef5ff);color:var(--accent-dark)}
+.keypad button.equals{grid-column:span 2;background:linear-gradient(180deg,var(--accent),var(--accent-dark));color:#fff;box-shadow:0 10px 26px rgba(51,88,255,0.2)}
+.keypad button.clear{background:linear-gradient(180deg,#fff3f3,#ffe6e6);color:var(--danger)}
+.keypad button:active{transform:translateY(3px) scale(.997);box-shadow:0 6px 12px rgba(10,18,40,0.06)}
+.history{margin-top:12px;font-size:13px;color:#233}
+.history .item{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.5);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.small{font-size:12px;opacity:.75}
+@media (max-width:420px){#output{height:80px}#mainValue{font-size:24px}.keypad button{padding:10px;font-size:15px}.menubar button{padding:7px;font-size:13px}}
